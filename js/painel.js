@@ -8,6 +8,7 @@ import {
   updateDoc,
   addDoc,
   setDoc,
+  getDocs,
   serverTimestamp,
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -83,18 +84,34 @@ window.cadastrarUsuario = async function () {
 };
 
 // Adicionar prato ao pedido
-window.adicionarPrato = function () {
-  const prato = select.value;
-  const qtd = document.getElementById("quantidade").value;
+window.adicionarPrato = async function () {
+  const pratoNome = select.value;
+  const qtd = parseInt(document.getElementById("quantidade").value);
+
+  // 🔥 Buscar prato completo no Firestore
+  const snapshot = await getDocs(collection(db, "pratos"));
+
+  let pratoSelecionado = null;
+
+  snapshot.forEach((docSnap) => {
+    const p = docSnap.data();
+    if (p.nome === pratoNome) {
+      pratoSelecionado = p;
+    }
+  });
+
+  if (!pratoSelecionado) return;
 
   pratosSelecionados.push({
-    nome: prato,
+    nome: pratoSelecionado.nome,
     quantidade: qtd,
+    preco: pratoSelecionado.preco,
+    categoria: pratoSelecionado.categoria,
   });
 
   document.getElementById("listaSelecionados").innerHTML += `
     <div class="bg-secondary p-2 rounded mb-2">
-      ${prato} x ${qtd}
+      ${pratoSelecionado.nome} x ${qtd}
     </div>
   `;
 };
@@ -151,6 +168,7 @@ window.registrarPedido = async function () {
     pratos: pratosSelecionados,
     ponto,
     status: "Pendente",
+    statusPagamento: "Aberto",
     dataHora: serverTimestamp(),
   });
 
@@ -270,8 +288,20 @@ onSnapshot(q, (snapshot) => {
   // 🔥 Renderiza já ordenado
   pedidos.forEach((pedido) => {
     let pratosHTML = "";
+    let totalPedido = 0;
+
     pedido.pratos.forEach((p) => {
+      // 👨‍🍳 Cozinha não vê bebidas
+      if (perfil === "cozinha" && p.categoria === "Bebida") {
+        return;
+      }
+
       pratosHTML += `<li>${p.nome} x ${p.quantidade}</li>`;
+
+      // 💰 Caixa e Dono calculam total
+      if (perfil === "caixa" || perfil === "dono") {
+        totalPedido += (p.preco || 0) * p.quantidade;
+      }
     });
 
     let classeStatus = "";
@@ -293,23 +323,49 @@ onSnapshot(q, (snapshot) => {
     }
 
     lista.innerHTML += `
-      <div class="card mb-3 shadow-sm ${classeStatus}">
-        <div class="card-body">
+    <div class="card mb-3 shadow-sm ${classeStatus}">
+      <div class="card-body">
 
-          <div class="d-flex justify-content-between">
-            <h5>Mesa ${pedido.mesa}</h5>
+        <div class="d-flex justify-content-between">
+          <h5>Mesa ${pedido.mesa}</h5>
+
+          <div>
             <span class="badge bg-${corStatus}">
               ${pedido.status}
             </span>
+
+            ${
+              perfil === "caixa" || perfil === "dono"
+                ? `
+              <span class="badge bg-info">
+                ${pedido.statusPagamento || "Aberto"}
+              </span>
+            `
+                : ""
+            }
           </div>
+        </div>
 
+        <hr>
+
+        <ul>${pratosHTML}</ul>
+
+        ${
+          perfil === "caixa" || perfil === "dono"
+            ? `
           <hr>
+          <h6>Total: R$ ${totalPedido.toFixed(2)}</h6>
+        `
+            : ""
+        }
 
-          <ul>${pratosHTML}</ul>
+        <p><strong>Ponto:</strong> ${pedido.ponto}</p>
 
-          <p><strong>Ponto:</strong> ${pedido.ponto}</p>
+        <div class="d-flex gap-2 mt-3">
 
-          <div class="d-flex gap-2 mt-3">
+          ${
+            perfil === "cozinha" || perfil === "dono"
+              ? `
             <button onclick="alterarStatus('${pedido.id}','Preparando')" 
               class="btn btn-warning btn-sm">
               Preparando
@@ -319,15 +375,38 @@ onSnapshot(q, (snapshot) => {
               class="btn btn-success btn-sm">
               Pronto
             </button>
-          </div>
+          `
+              : ""
+          }
+
+          ${
+            perfil === "caixa" || perfil === "dono"
+              ? `
+            <button onclick="alterarPagamento('${pedido.id}')"
+              class="btn btn-primary btn-sm">
+              Marcar como Pago
+            </button>
+          `
+              : ""
+          }
 
         </div>
-      </div>
-    `;
-  });
-});
 
-window.alterarStatus = async function (id, novoStatus) {
-  const pedidoRef = doc(db, "pedidos", id);
-  await updateDoc(pedidoRef, { status: novoStatus });
-};
+      </div>
+    </div>
+  `;
+  });
+
+  window.alterarPagamento = async function (id) {
+    const pedidoRef = doc(db, "pedidos", id);
+
+    await updateDoc(pedidoRef, {
+      statusPagamento: "Pago",
+    });
+  };
+
+  window.alterarStatus = async function (id, novoStatus) {
+    const pedidoRef = doc(db, "pedidos", id);
+    await updateDoc(pedidoRef, { status: novoStatus });
+  };
+});
