@@ -270,6 +270,7 @@ onSnapshot(q, (snapshot) => {
     Pendente: 1,
     Pronto: 2,
     Preparando: 3,
+    Entregue: 4,
   };
 
   pedidos.sort((a, b) => {
@@ -287,6 +288,11 @@ onSnapshot(q, (snapshot) => {
 
   // 🔥 Renderiza já ordenado
   pedidos.forEach((pedido) => {
+    // 🔥 Cozinha não vê pedidos entregues
+    if (perfil === "cozinha" && pedido.status === "Entregue") {
+      return;
+    }
+
     let pratosHTML = "";
     let totalPedido = 0;
 
@@ -319,6 +325,11 @@ onSnapshot(q, (snapshot) => {
       case "Pronto":
         classeStatus = "status-pronto";
         corStatus = "success";
+        break;
+
+      case "Entregue":
+        classeStatus = "status-entregue";
+        corStatus = "dark";
         break;
     }
 
@@ -361,36 +372,47 @@ onSnapshot(q, (snapshot) => {
 
         <p><strong>Ponto:</strong> ${pedido.ponto}</p>
 
-        <div class="d-flex gap-2 mt-3">
+<div class="d-flex gap-2 mt-3">
 
-          ${
-            perfil === "cozinha" || perfil === "dono"
-              ? `
-            <button onclick="alterarStatus('${pedido.id}','Preparando')" 
-              class="btn btn-warning btn-sm">
-              Preparando
-            </button>
+  ${
+    perfil === "cozinha" || perfil === "dono"
+      ? `
+    <button onclick="alterarStatus('${pedido.id}','Preparando')" 
+      class="btn btn-warning btn-sm">
+      Preparando
+    </button>
 
-            <button onclick="alterarStatus('${pedido.id}','Pronto')" 
-              class="btn btn-success btn-sm">
-              Pronto
-            </button>
-          `
-              : ""
-          }
+    <button onclick="alterarStatus('${pedido.id}','Pronto')" 
+      class="btn btn-success btn-sm">
+      Pronto
+    </button>
+  `
+      : ""
+  }
 
-          ${
-            perfil === "caixa" || perfil === "dono"
-              ? `
-            <button onclick="alterarPagamento('${pedido.id}')"
-              class="btn btn-primary btn-sm">
-              Marcar como Pago
-            </button>
-          `
-              : ""
-          }
+  ${
+    perfil === "garcom" || perfil === "dono"
+      ? `
+    <button onclick="alterarStatus('${pedido.id}','Entregue')" 
+      class="btn btn-dark btn-sm">
+      Entregue
+    </button>
+  `
+      : ""
+  }
 
-        </div>
+  ${
+    perfil === "caixa" || perfil === "dono"
+      ? `
+    <button onclick="alterarPagamento('${pedido.id}')"
+      class="btn btn-primary btn-sm">
+      Marcar como Pago
+    </button>
+  `
+      : ""
+  }
+
+</div>
 
       </div>
     </div>
