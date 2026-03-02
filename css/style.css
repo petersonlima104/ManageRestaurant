@@ -1,0 +1,192 @@
+/* ===========================
+   RESET E CONFIG GERAL
+=========================== */
+body {
+  background: linear-gradient(135deg, #1f2937, #111827);
+  color: #fff;
+}
+
+.container {
+  max-width: 900px;
+}
+
+.navbar {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+h2,
+h3 {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* ===========================
+   CARD PADRÃO DO SISTEMA
+=========================== */
+.card {
+  background: #1f2937;
+  color: #fff;
+  border-radius: 14px;
+  border: none;
+}
+
+.card-body {
+  padding: 1.2rem;
+}
+
+/* Sombra elegante */
+.shadow-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ===========================
+   BOTÕES CUSTOM
+=========================== */
+
+.btn {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ===========================
+   BADGES DE STATUS
+=========================== */
+
+.badge {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+/* ===========================
+   LOGIN
+=========================== */
+
+.login-card {
+  border-radius: 16px;
+  backdrop-filter: blur(6px);
+}
+
+.login-title {
+  font-weight: bold;
+  color: #34495e;
+}
+
+/* ===========================
+   DASHBOARD
+=========================== */
+
+.dashboard-container {
+  max-width: 500px;
+  margin: auto;
+}
+
+.dashboard-container .btn {
+  padding: 12px;
+  font-size: 1rem;
+}
+
+/* ===========================
+   CADASTRO DE PRATOS
+=========================== */
+
+#listaPratos .card {
+  transition: 0.2s;
+}
+
+#listaPratos .card:hover {
+  transform: scale(1.01);
+}
+
+/* ===========================
+   NOVO PEDIDO
+=========================== */
+
+#listaSelecionados div {
+  background: #ffffff;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* ===========================
+   TELA COZINHA
+=========================== */
+
+#listaPedidos .card {
+  border-left: 6px solid transparent;
+}
+
+/* Cores por status */
+.status-pendente {
+  border-left: 6px solid #dc3545;
+}
+
+.status-preparando {
+  border-left: 6px solid #ffc107;
+}
+
+.status-pronto {
+  border-left: 6px solid #198754;
+}
+
+/* ===========================
+   FORMULÁRIOS
+=========================== */
+
+.form-control,
+.form-select {
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* ===========================
+   RESPONSIVIDADE
+=========================== */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+  }
+}
+
+/* ===========================
+   ANIMAÇÃO SUAVE
+=========================== */
+
+.card {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

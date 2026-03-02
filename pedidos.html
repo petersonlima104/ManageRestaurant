@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Painel Restaurante</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body>
+    <nav class="navbar navbar-dark bg-dark px-3">
+      <span class="navbar-brand">🍽 Sistema Restaurante</span>
+      <button onclick="logout()" class="btn btn-outline-light btn-sm">
+        Sair
+      </button>
+    </nav>
+
+    <div class="container mt-4">
+      <!-- BOTÕES SUPERIORES -->
+      <div class="d-flex gap-2 mb-4 flex-wrap">
+        <button onclick="abrirModalPedido()" class="btn btn-success">
+          ➕ Registrar Pedido
+        </button>
+
+        <button
+          onclick="abrirModalPrato()"
+          id="btnPrato"
+          class="btn btn-primary d-none"
+        >
+          🍔 Cadastrar Pratos
+        </button>
+
+        <button
+          onclick="abrirModalUsuario()"
+          id="btnUsuario"
+          class="btn btn-primary d-none"
+        >
+          👤 Cadastrar Usuário
+        </button>
+      </div>
+
+      <!-- LISTA PEDIDOS -->
+      <div id="listaPedidos"></div>
+    </div>
+
+    <!-- MODAL REGISTRAR PEDIDO -->
+    <div class="modal fade" id="modalPedido" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark text-white rounded-4">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">🍽 Novo Pedido</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Mesa</label>
+                <input type="number" id="mesa" class="form-control" />
+              </div>
+
+              <div class="col-md-5">
+                <label class="form-label">Prato</label>
+                <select id="selectPratos" class="form-select"></select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Qtd</label>
+                <input
+                  type="number"
+                  id="quantidade"
+                  class="form-control"
+                  value="1"
+                />
+              </div>
+            </div>
+
+            <button
+              onclick="adicionarPrato()"
+              class="btn btn-outline-light mt-3"
+            >
+              ➕ Adicionar Prato
+            </button>
+
+            <hr />
+
+            <div id="listaSelecionados"></div>
+
+            <div class="mt-3">
+              <label class="form-label">Ponto da Carne</label>
+              <select id="ponto" class="form-select">
+                <option>Mal passado</option>
+                <option>Ao ponto</option>
+                <option>Bem passado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer border-0">
+            <button onclick="registrarPedido()" class="btn btn-success w-100">
+              Registrar Pedido
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CADASTRAR / GERENCIAR PRATOS -->
+    <div class="modal fade" id="modalPrato" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark text-white rounded-4">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">🍽 Gerenciar Pratos</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <!-- FORM -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <input
+                  type="text"
+                  id="nomePrato"
+                  class="form-control"
+                  placeholder="Nome do prato"
+                />
+              </div>
+              <div class="col-md-3">
+                <input
+                  type="number"
+                  id="precoPrato"
+                  class="form-control"
+                  placeholder="Preço"
+                  step="0.01"
+                />
+              </div>
+              <div class="col-md-3">
+                <select id="categoriaPrato" class="form-select">
+                  <option>Comida</option>
+                  <option>Sobremesa</option>
+                  <option>Bebida</option>
+                  <option>Lanche</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <button onclick="salvarPrato()" class="btn btn-success w-100">
+                  Salvar
+                </button>
+              </div>
+            </div>
+
+            <hr class="border-secondary" />
+
+            <!-- LISTA DE PRATOS -->
+            <div id="listaPratos"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CADASTRAR USUÁRIO -->
+    <div class="modal fade" id="modalUsuario" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white rounded-4">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">👤 Cadastrar Usuário</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="mb-3">
+              <label>Nome</label>
+              <input type="text" id="nomeUsuario" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+              <label>Email</label>
+              <input type="email" id="emailUsuario" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+              <label>Senha</label>
+              <input type="password" id="senhaUsuario" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+              <label>Perfil</label>
+              <select id="perfilUsuario" class="form-select">
+                <option value="cozinha">Cozinha</option>
+                <option value="garcom">Garçom</option>
+                <option value="dono">Dono</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer border-0">
+            <button onclick="cadastrarUsuario()" class="btn btn-success w-100">
+              Cadastrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="js/painel.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
