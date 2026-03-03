@@ -42,6 +42,10 @@
         >
           👤 Cadastrar Usuário
         </button>
+
+        <button id="btnRelatorios" class="btn btn-info d-none">
+          Relatórios
+        </button>
       </div>
 
       <!-- LISTA PEDIDOS -->
@@ -215,6 +219,47 @@
             <button onclick="cadastrarUsuario()" class="btn btn-success w-100">
               Cadastrar
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL RELATÓRIOS -->
+    <div class="modal fade" id="modalRelatorio">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-white">
+          <div class="modal-header">
+            <h5 class="modal-title">Relatório de Faturamento</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="row mb-3">
+              <div class="col">
+                <label>Data Inicial</label>
+                <input type="date" id="dataInicial" class="form-control" />
+              </div>
+
+              <div class="col">
+                <label>Data Final</label>
+                <input type="date" id="dataFinal" class="form-control" />
+              </div>
+
+              <div class="col d-flex align-items-end">
+                <button
+                  onclick="gerarRelatorio()"
+                  class="btn btn-success w-100"
+                >
+                  Filtrar
+                </button>
+              </div>
+            </div>
+
+            <div id="resultadoRelatorio"></div>
           </div>
         </div>
       </div>

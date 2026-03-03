@@ -236,6 +236,7 @@ const perfil = localStorage.getItem("perfil");
 if (perfil === "dono") {
   document.getElementById("btnPrato").classList.remove("d-none");
   document.getElementById("btnUsuario").classList.remove("d-none");
+  document.getElementById("btnRelatorios").classList.remove("d-none");
 }
 
 // Logout
@@ -539,4 +540,63 @@ window.fecharMesa = async function (mesa) {
 window.alterarStatus = async function (id, novoStatus) {
   const pedidoRef = doc(db, "pedidos", id);
   await updateDoc(pedidoRef, { status: novoStatus });
+};
+
+window.abrirRelatorio = function () {
+  const modal = new bootstrap.Modal(document.getElementById("modalRelatorio"));
+  modal.show();
+};
+
+document
+  .getElementById("btnRelatorios")
+  .addEventListener("click", abrirRelatorio);
+
+window.gerarRelatorio = async function () {
+  const dataInicial = document.getElementById("dataInicial").value;
+  const dataFinal = document.getElementById("dataFinal").value;
+
+  const resultado = document.getElementById("resultadoRelatorio");
+  resultado.innerHTML = "";
+
+  const snapshot = await getDocs(collection(db, "pedidos"));
+
+  let totalGeral = 0;
+
+  snapshot.forEach((docSnap) => {
+    const pedido = docSnap.data();
+
+    if (!pedido.dataHora) return;
+
+    const dataPedido = new Date(pedido.dataHora.seconds * 1000);
+
+    const inicio = dataInicial ? new Date(dataInicial + "T00:00:00") : null;
+    const fim = dataFinal ? new Date(dataFinal + "T23:59:59") : null;
+
+    if ((inicio && dataPedido < inicio) || (fim && dataPedido > fim)) {
+      return;
+    }
+
+    let totalPedido = 0;
+
+    pedido.pratos.forEach((p) => {
+      totalPedido += (p.preco || 0) * p.quantidade;
+    });
+
+    totalGeral += totalPedido;
+
+    resultado.innerHTML += `
+      <div class="card bg-secondary mb-2 p-2">
+        <strong>Mesa ${pedido.mesa}</strong><br>
+        Data: ${dataPedido.toLocaleString()}<br>
+        Total: R$ ${totalPedido.toFixed(2)}
+      </div>
+    `;
+  });
+
+  resultado.innerHTML += `
+    <hr>
+    <h4 class="text-success">
+      Faturamento Total: R$ ${totalGeral.toFixed(2)}
+    </h4>
+  `;
 };
