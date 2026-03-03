@@ -502,17 +502,33 @@ onSnapshot(q, (snapshot) => {
     </div>
   `;
   });
-
-  window.alterarPagamento = async function (id) {
-    const pedidoRef = doc(db, "pedidos", id);
-
-    await updateDoc(pedidoRef, {
-      statusPagamento: "Pago",
-    });
-  };
-
-  window.alterarStatus = async function (id, novoStatus) {
-    const pedidoRef = doc(db, "pedidos", id);
-    await updateDoc(pedidoRef, { status: novoStatus });
-  };
 });
+
+window.alterarPagamento = async function (id) {
+  const pedidoRef = doc(db, "pedidos", id);
+
+  await updateDoc(pedidoRef, {
+    statusPagamento: "Pago",
+  });
+};
+
+window.fecharMesa = async function (mesa) {
+  const snapshot = await getDocs(collection(db, "pedidos"));
+
+  snapshot.forEach(async (docSnap) => {
+    const pedido = docSnap.data();
+
+    if (pedido.mesa == mesa) {
+      await updateDoc(doc(db, "pedidos", docSnap.id), {
+        statusPagamento: "Pago",
+      });
+    }
+  });
+
+  alert("Mesa fechada com sucesso!");
+};
+
+window.alterarStatus = async function (id, novoStatus) {
+  const pedidoRef = doc(db, "pedidos", id);
+  await updateDoc(pedidoRef, { status: novoStatus });
+};
