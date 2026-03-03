@@ -286,6 +286,90 @@ onSnapshot(q, (snapshot) => {
     return dataA - dataB;
   });
 
+  // 🔥 Se for caixa, agrupar por mesa
+  if (perfil === "caixa") {
+    const mesasAgrupadas = {};
+
+    pedidos.forEach((pedido) => {
+      if (!mesasAgrupadas[pedido.mesa]) {
+        mesasAgrupadas[pedido.mesa] = {
+          pedidos: [],
+          total: 0,
+        };
+      }
+
+      mesasAgrupadas[pedido.mesa].pedidos.push(pedido);
+
+      // Somar total do pedido
+      pedido.pratos.forEach((p) => {
+        mesasAgrupadas[pedido.mesa].total += (p.preco || 0) * p.quantidade;
+      });
+    });
+
+    // Renderizar agrupado
+    Object.keys(mesasAgrupadas).forEach((mesa) => {
+      const todosPagos = mesasAgrupadas[mesa].pedidos.every(
+        (p) => p.statusPagamento === "Pago",
+      );
+
+      let pedidosHTML = "";
+
+      mesasAgrupadas[mesa].pedidos.forEach((pedido) => {
+        let itensHTML = "";
+
+        pedido.pratos.forEach((p) => {
+          itensHTML += `<li>${p.nome} x ${p.quantidade}</li>`;
+        });
+
+        pedidosHTML += `
+        <div class="mb-3 p-2 border rounded">
+          <strong>Status:</strong> ${pedido.status}
+          <ul>${itensHTML}</ul>
+        </div>
+      `;
+      });
+
+      lista.innerHTML += `
+  <div class="card mb-4 shadow-lg ${
+    todosPagos ? "border-success" : "border-primary"
+  }">
+    <div class="card-body">
+
+      <div class="d-flex justify-content-between align-items-center">
+        <h4>Mesa ${mesa}</h4>
+        ${
+          todosPagos
+            ? `<span class="badge bg-success">Mesa Fechada</span>`
+            : `<span class="badge bg-warning text-dark">Aberta</span>`
+        }
+      </div>
+
+      <hr>
+
+      ${pedidosHTML}
+
+      <hr>
+      <h5>Total Geral: R$ ${mesasAgrupadas[mesa].total.toFixed(2)}</h5>
+
+      ${
+        !todosPagos
+          ? `
+        <button onclick="fecharMesa('${mesa}')"
+          class="btn btn-success mt-2">
+          Fechar Conta
+        </button>
+      `
+          : ""
+      }
+
+    </div>
+  </div>
+`;
+    });
+
+    return; // 🔥 IMPORTANTE: impede renderização normal
+  }
+
   // 🔥 Renderiza já ordenado
   pedidos.forEach((pedido) => {
     // 🔥 Cozinha não vê pedidos entregues
