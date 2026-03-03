@@ -372,8 +372,16 @@ onSnapshot(q, (snapshot) => {
 
   // 🔥 Renderiza já ordenado
   pedidos.forEach((pedido) => {
-    // 🔥 Cozinha não vê pedidos entregues
-    if (perfil === "cozinha" && pedido.status === "Entregue") {
+    // 🔥 Cozinha não vê pedidos entregues nem pagos
+    if (
+      perfil === "cozinha" &&
+      (pedido.status === "Entregue" || pedido.statusPagamento === "Pago")
+    ) {
+      return;
+    }
+
+    // 🔥 Garçom não vê pedidos pagos
+    if (perfil === "garcom" && pedido.statusPagamento === "Pago") {
       return;
     }
 
