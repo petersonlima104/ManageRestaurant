@@ -407,6 +407,17 @@ onSnapshot(q, (snapshot) => {
       return;
     }
 
+    // 🔥 Cozinha não deve ver pedidos que tenham somente bebidas
+    if (perfil === "cozinha") {
+      const temItemCozinha = pedido.pratos.some(
+        (p) => p.categoria !== "Bebida",
+      );
+
+      if (!temItemCozinha) {
+        return;
+      }
+    }
+
     let pratosHTML = "";
     let totalPedido = 0;
 
