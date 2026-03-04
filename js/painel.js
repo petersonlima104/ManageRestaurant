@@ -458,12 +458,23 @@ onSnapshot(q, (snapshot) => {
         break;
     }
 
+    let dataFormatada = "Sem data";
+
+    if (pedido.dataHora) {
+      const data = pedido.dataHora.toDate();
+      dataFormatada = data.toLocaleString("pt-BR");
+    }
+
     lista.innerHTML += `
     <div class="card mb-3 shadow-sm ${classeStatus}">
       <div class="card-body">
 
         <div class="d-flex justify-content-between">
           <h5>Mesa ${pedido.mesa}</h5>
+
+          <p class="text-warning small mb-2 fw-semibold">
+            🕒 ${dataFormatada}
+          </p>
 
           <div>
             <span class="badge bg-${corStatus}">
