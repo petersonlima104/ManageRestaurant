@@ -163,8 +163,23 @@ window.registrarPedido = async function () {
     return;
   }
 
+  const snapshot = await getDocs(collection(db, "pedidos"));
+
+  let comandaIdExistente = null;
+
+  snapshot.forEach((docSnap) => {
+    const pedido = docSnap.data();
+
+    if (pedido.mesa == mesa && pedido.statusPagamento === "Aberto") {
+      comandaIdExistente = pedido.comandaId;
+    }
+  });
+
+  const comandaId = comandaIdExistente || Date.now().toString();
+
   await addDoc(collection(db, "pedidos"), {
     mesa,
+    comandaId,
     pratos: pratosSelecionados,
     ponto,
     status: "Pendente",
@@ -289,21 +304,27 @@ onSnapshot(q, (snapshot) => {
 
   // 🔥 Se for caixa, agrupar por mesa
   if (perfil === "caixa") {
+    pedidos = pedidos.filter((pedido) => pedido.statusPagamento === "Fechada");
+
     const mesasAgrupadas = {};
 
     pedidos.forEach((pedido) => {
-      if (!mesasAgrupadas[pedido.mesa]) {
-        mesasAgrupadas[pedido.mesa] = {
+      const chave = pedido.mesa + "_" + pedido.comandaId;
+
+      if (!mesasAgrupadas[chave]) {
+        mesasAgrupadas[chave] = {
+          mesa: pedido.mesa,
+          comandaId: pedido.comandaId,
           pedidos: [],
           total: 0,
         };
       }
 
-      mesasAgrupadas[pedido.mesa].pedidos.push(pedido);
+      mesasAgrupadas[chave].pedidos.push(pedido);
 
       // Somar total do pedido
       pedido.pratos.forEach((p) => {
-        mesasAgrupadas[pedido.mesa].total += (p.preco || 0) * p.quantidade;
+        mesasAgrupadas[chave].total += (p.preco || 0) * p.quantidade;
       });
     });
 
@@ -355,7 +376,7 @@ onSnapshot(q, (snapshot) => {
       ${
         !todosPagos
           ? `
-        <button onclick="fecharMesa('${mesa}')"
+        <button onclick="fecharMesa('${mesasAgrupadas[mesa].mesa}','${mesasAgrupadas[mesa].comandaId}')"
           class="btn btn-success mt-2">
           Fechar Conta
         </button>
@@ -467,6 +488,18 @@ onSnapshot(q, (snapshot) => {
 
 <div class="d-flex gap-2 mt-3">
 
+${
+  (perfil === "garcom" || perfil === "dono") &&
+  pedido.statusPagamento === "Aberto"
+    ? `
+  <button onclick="encerrarComanda('${pedido.mesa}','${pedido.comandaId}')"
+    class="btn btn-warning btn-sm">
+    Encerrar Atendimento
+  </button>
+`
+    : ""
+}
+
   ${
     perfil === "cozinha" || perfil === "dono"
       ? `
@@ -521,25 +554,49 @@ window.alterarPagamento = async function (id) {
   });
 };
 
-window.fecharMesa = async function (mesa) {
+window.fecharMesa = async function (mesa, comandaId) {
   const snapshot = await getDocs(collection(db, "pedidos"));
 
   snapshot.forEach(async (docSnap) => {
     const pedido = docSnap.data();
 
-    if (pedido.mesa == mesa) {
+    if (
+      pedido.mesa == mesa &&
+      pedido.comandaId == comandaId &&
+      pedido.statusPagamento === "Fechada"
+    ) {
       await updateDoc(doc(db, "pedidos", docSnap.id), {
         statusPagamento: "Pago",
       });
     }
   });
 
-  alert("Mesa fechada com sucesso!");
+  alert("Pagamento realizado com sucesso!");
 };
 
 window.alterarStatus = async function (id, novoStatus) {
   const pedidoRef = doc(db, "pedidos", id);
   await updateDoc(pedidoRef, { status: novoStatus });
+};
+
+window.encerrarComanda = async function (mesa, comandaId) {
+  const snapshot = await getDocs(collection(db, "pedidos"));
+
+  snapshot.forEach(async (docSnap) => {
+    const pedido = docSnap.data();
+
+    if (
+      pedido.mesa == mesa &&
+      pedido.comandaId == comandaId &&
+      pedido.statusPagamento === "Aberto"
+    ) {
+      await updateDoc(doc(db, "pedidos", docSnap.id), {
+        statusPagamento: "Fechada",
+      });
+    }
+  });
+
+  alert("Comanda encerrada! Aguardando pagamento no caixa.");
 };
 
 window.abrirRelatorio = function () {
