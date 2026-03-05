@@ -157,6 +157,7 @@ onSnapshot(collection(db, "pratos"), (snapshot) => {
 window.registrarPedido = async function () {
   const mesa = document.getElementById("mesa").value;
   const ponto = document.getElementById("ponto").value;
+  const apelido = document.getElementById("apelidoComanda")?.value || "";
 
   if (!mesa || pratosSelecionados.length === 0) {
     alert("Preencha mesa e adicione pratos!");
@@ -165,21 +166,55 @@ window.registrarPedido = async function () {
 
   const snapshot = await getDocs(collection(db, "pedidos"));
 
-  let comandaIdExistente = null;
+  const criarNova = document.getElementById("novaComanda").checked;
+  const comandaSelecionada =
+    document.getElementById("selecionarComanda")?.value;
 
-  snapshot.forEach((docSnap) => {
-    const pedido = docSnap.data();
+  let comandaId = null;
 
-    if (pedido.mesa == mesa && pedido.statusPagamento === "Aberto") {
-      comandaIdExistente = pedido.comandaId;
+  if (criarNova) {
+    // cria nova comanda
+    comandaId = Date.now().toString();
+  } else if (comandaSelecionada) {
+    // usa comanda escolhida
+    comandaId = comandaSelecionada;
+  } else {
+    const comandas = new Set();
+
+    snapshot.forEach((docSnap) => {
+      const pedido = docSnap.data();
+
+      if (pedido.mesa == mesa && pedido.statusPagamento === "Aberto") {
+        comandas.add(pedido.comandaId);
+      }
+    });
+
+    // 🔥 se existir mais de uma comanda e nenhuma foi selecionada
+    if (comandas.size > 1 && !comandaSelecionada) {
+      alert("Selecione a comanda para adicionar o pedido!");
+      return;
     }
-  });
 
-  const comandaId = comandaIdExistente || Date.now().toString();
+    // 🔥 se selecionou uma comanda
+    if (comandaSelecionada) {
+      comandaId = comandaSelecionada;
+    }
+
+    // 🔥 se só existe uma comanda aberta
+    else if (comandas.size === 1) {
+      comandaId = [...comandas][0];
+    }
+
+    // 🔥 se não existe comanda
+    else {
+      comandaId = Date.now().toString();
+    }
+  }
 
   await addDoc(collection(db, "pedidos"), {
     mesa,
     comandaId,
+    apelidoComanda: apelido,
     pratos: pratosSelecionados,
     ponto,
     status: "Pendente",
@@ -264,7 +299,128 @@ window.logout = async function () {
 window.abrirModalPedido = function () {
   const modal = new bootstrap.Modal(document.getElementById("modalPedido"));
   modal.show();
+
+  // 🔥 limpar campos
+  document.getElementById("mesa").value = "";
+  document.getElementById("ponto").value = "Ao ponto";
+  document.getElementById("apelidoComanda").value = "";
+  document.getElementById("quantidade").value = 1;
+
+  // 🔥 limpar lista de pratos
+  pratosSelecionados = [];
+  document.getElementById("listaSelecionados").innerHTML = "";
+
+  // 🔥 Desmarcar checkbox nova comanda
+  const checkNovaComanda = document.getElementById("novaComanda");
+  if (checkNovaComanda) {
+    checkNovaComanda.checked = false;
+  }
+
+  const campoMesa = document.getElementById("mesa");
+
+  if (campoMesa.value) {
+    carregarComandasAbertas(campoMesa.value);
+  }
 };
+
+// Função para carregar comandas abertas ao selecionar mesa
+async function carregarComandasAbertas(mesa) {
+  const select = document.getElementById("selecionarComanda");
+  const container = document.getElementById("selecionarComandaContainer");
+
+  if (!select || !container) return;
+
+  select.innerHTML = '<option value="">Selecione a comanda</option>';
+
+  const snapshot = await getDocs(collection(db, "pedidos"));
+
+  const comandas = {};
+
+  snapshot.forEach((docSnap) => {
+    const pedido = docSnap.data();
+
+    if (pedido.mesa == mesa && pedido.statusPagamento === "Aberto") {
+      if (!comandas[pedido.comandaId]) {
+        comandas[pedido.comandaId] = {
+          quantidade: 0,
+          apelido: pedido.apelidoComanda || "",
+        };
+      }
+
+      comandas[pedido.comandaId].quantidade++;
+    }
+  });
+
+  const totalComandas = Object.keys(comandas).length;
+
+  if (totalComandas > 1) {
+    container.classList.remove("d-none");
+
+    Object.keys(comandas).forEach((id) => {
+      const info = comandas[id];
+
+      const option = document.createElement("option");
+      option.value = id;
+
+      const apelido = info.apelido ? ` - ${info.apelido}` : "";
+
+      option.textContent = `Comanda ${id}${apelido} (${info.quantidade} pedidos)`;
+
+      select.appendChild(option);
+    });
+  } else {
+    container.classList.add("d-none");
+  }
+}
+
+// Verificar comandas abertas na mesa
+const campoMesa = document.getElementById("mesa");
+const selectComanda = document.getElementById("selecionarComanda");
+
+if (selectComanda) {
+  selectComanda.addEventListener("change", async () => {
+    const comandaId = selectComanda.value;
+
+    const campoApelido = document.getElementById("apelidoComanda");
+
+    if (!comandaId) {
+      campoApelido.value = "";
+      campoApelido.removeAttribute("readonly");
+      return;
+    }
+
+    const snapshot = await getDocs(collection(db, "pedidos"));
+
+    snapshot.forEach((docSnap) => {
+      const pedido = docSnap.data();
+
+      if (pedido.comandaId === comandaId) {
+        campoApelido.value = pedido.apelidoComanda || "";
+        campoApelido.setAttribute("readonly", true);
+      }
+    });
+  });
+}
+
+if (campoMesa) {
+  campoMesa.addEventListener("change", () => {
+    carregarComandasAbertas(campoMesa.value);
+  });
+}
+
+// 🔥 Quando marcar "Nova Comanda", liberar campo apelido
+const checkNovaComanda = document.getElementById("novaComanda");
+
+if (checkNovaComanda) {
+  checkNovaComanda.addEventListener("change", () => {
+    const campoApelido = document.getElementById("apelidoComanda");
+
+    if (checkNovaComanda.checked) {
+      campoApelido.value = "";
+      campoApelido.removeAttribute("readonly");
+    }
+  });
+}
 
 // Listar pedidos
 const q = collection(db, "pedidos");
@@ -315,6 +471,7 @@ onSnapshot(q, (snapshot) => {
         mesasAgrupadas[chave] = {
           mesa: pedido.mesa,
           comandaId: pedido.comandaId,
+          apelido: pedido.apelidoComanda || "",
           pedidos: [],
           total: 0,
         };
@@ -358,7 +515,10 @@ onSnapshot(q, (snapshot) => {
     <div class="card-body">
 
       <div class="d-flex justify-content-between align-items-center">
-        <h4>Mesa ${mesa}</h4>
+        <h4>
+        Mesa ${mesasAgrupadas[mesa].mesa}
+        ${mesasAgrupadas[mesa].apelido ? ` - ${mesasAgrupadas[mesa].apelido}` : ""}
+        </h4>
         ${
           todosPagos
             ? `<span class="badge bg-success">Mesa Fechada</span>`
@@ -470,7 +630,10 @@ onSnapshot(q, (snapshot) => {
       <div class="card-body">
 
         <div class="d-flex justify-content-between">
-          <h5>Mesa ${pedido.mesa}</h5>
+          <h5>
+          Mesa ${pedido.mesa}
+          ${pedido.apelidoComanda ? ` - ${pedido.apelidoComanda}` : ""}
+          </h5>
 
           <p class="text-warning small mb-2 fw-semibold">
             🕒 ${dataFormatada}

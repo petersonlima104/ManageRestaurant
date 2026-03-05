@@ -107,6 +107,34 @@
                 <option>Bem passado</option>
               </select>
             </div>
+
+            <div class="form-check mt-3">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="novaComanda"
+              />
+              <label class="form-check-label" for="novaComanda">
+                Criar nova comanda (conta separada)
+              </label>
+            </div>
+
+            <div class="mt-3 d-none" id="selecionarComandaContainer">
+              <label class="form-label">Selecionar comanda existente</label>
+              <select class="form-select" id="selecionarComanda">
+                <option value="">Selecione a comanda</option>
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Apelido da Comanda (opcional)</label>
+              <input
+                type="text"
+                id="apelidoComanda"
+                class="form-control"
+                placeholder="Ex: João / Aniversário / Mesa Família"
+              />
+            </div>
           </div>
 
           <div class="modal-footer border-0">
